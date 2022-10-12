@@ -1,1 +1,1 @@
-declare const runner: () => Promise<void>;
+export {};
