@@ -2,10 +2,9 @@
   "name": "cocoscreator-tools",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "main": "./bin/CCT.js",
+  "types": "./bin/CCT.d.ts",
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TanMusong/cocoscreator-tools.git"
@@ -18,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/TanMusong/cocoscreator-tools/issues"
   },
-  "homepage": "https://github.com/TanMusong/cocoscreator-tools#readme"
+  "homepage": "https://github.com/TanMusong/cocoscreator-tools#readme",
+  "devDependencies": {
+    "typescript": "^4.8.4"
+  }
 }
