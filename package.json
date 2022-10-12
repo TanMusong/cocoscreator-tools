@@ -2,8 +2,8 @@
   "name": "cocoscreator-tools",
   "version": "1.0.0",
   "description": "",
-  "main": "./bin/CCT.js",
-  "types": "./bin/CCT.d.ts",
+  "main": "./dist/CCT.js",
+  "types": "./dist/CCT.d.ts",
   "scripts": {},
   "repository": {
     "type": "git",
@@ -19,6 +19,14 @@
   },
   "homepage": "https://github.com/TanMusong/cocoscreator-tools#readme",
   "devDependencies": {
+    "@types/node": "^18.8.4",
     "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  },
+  "bin": {
+    "cct": "./bin/cct"
   }
 }
