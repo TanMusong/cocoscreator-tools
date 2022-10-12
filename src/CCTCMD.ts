@@ -1,5 +1,7 @@
 import cct from "./CCT";
 import fs from "fs";
+import path from "path";
+import Apk from "./apk/Apk";
 
 const getArg = (key: string, check?: (value: string) => boolean): string | null => {
     const index = process.argv.indexOf(key);
@@ -39,12 +41,12 @@ const runner = async (): Promise<void> => {
                     console.error(`${filePath} not exists`);
                     process.exit(1);
                 }
-                const xxtea = getArg('-xxtea', value => !value.startsWith('-'));
+                const xxtea = getArg('-xxtea', value => value && !value.startsWith('-'));
                 if (!xxtea) {
                     console.error(`illegal parameter: -xxtea`);
                     process.exit(1);
                 }
-                const outFilePath = getArg('-out', value => !value.startsWith('-')) || filePath;
+                const outFilePath = getArg('-out', value => value && !value.startsWith('-')) || filePath;
                 const compress = haveArg('-compress') || haveArg('-zip');
                 const cotnent = fs.readFileSync(filePath);
                 const script: string | Uint8Array | null = (command === 'd' || command === 'decrypt') ? cct.decryptJSC(cotnent, xxtea, compress) : cct.encryptJS(cotnent.toString(), xxtea, compress);
@@ -53,6 +55,44 @@ const runner = async (): Promise<void> => {
                     process.exit(2);
                 }
                 fs.writeFileSync(outFilePath, script);
+            }
+            break;
+        case 'apk':
+            {
+                const apkPath = process.argv[3];
+                if (!fs.existsSync(apkPath)) process.exit(1);
+
+                const output = getArg('-output', value => !value.startsWith('-'));
+                if (!output) process.exit(1);
+
+
+
+                let keystore: string, storepass: string, alias: string, keypass: string;
+                keystore = getArg('-keystore', value => !value.startsWith('-'));
+                if (keystore) {
+                    storepass = getArg('-storepass', value => !value.startsWith('-'));
+                    if (!storepass) process.exit(1);
+                    alias = getArg('-alias', value => !value.startsWith('-'));
+                    if (!alias) process.exit(1);
+                    keypass = getArg('-keypass', value => !value.startsWith('-'));
+                    if (!keypass) process.exit(1);
+                } else {
+                    //keytool -genkey -keyalg RSA -keysize 1024 -validity 3650 -keystore debug.keystore -storepass 123456 -alias tms -keypass 123456 -dname CN=TanMusong,OU=TanMusong,O=TanMusong,L=Beijing,S=Beijing,C=CN
+                    keystore = path.join(__dirname, '..', '..', 'keystore', 'debug.keystore');
+                    storepass = '123456';
+                    alias = 'tms';
+                    keypass = '123456'
+                }
+                const unpackedAPK: Apk.UnpackedAPK = await Apk.Unpack(apkPath);
+
+                if (haveArg('-log')) {
+                    const xxtea = getArg('-xxtea', value => !value.startsWith('-'));
+                    const compress = haveArg('-compress') || haveArg('-zip');
+                    unpackedAPK.openCCLog(xxtea, compress);
+                }
+
+                await unpackedAPK.pack(output, keystore, storepass, alias, keypass)
+                unpackedAPK.clean();
             }
             break;
         default:
