@@ -20,11 +20,14 @@
   "homepage": "https://github.com/TanMusong/cocoscreator-tools#readme",
   "devDependencies": {
     "@types/node": "^18.8.4",
+    "@types/pako": "^2.0.0",
     "typescript": "^4.8.4"
   },
   "dependencies": {
     "fs": "^0.0.1-security",
-    "path": "^0.12.7"
+    "pako": "^2.0.4",
+    "path": "^0.12.7",
+    "xxtea-node": "^1.1.4"
   },
   "bin": {
     "cct": "./bin/cct"

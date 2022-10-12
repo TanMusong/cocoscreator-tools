@@ -13,6 +13,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const CCT_1 = __importDefault(require("./CCT"));
+const fs_1 = __importDefault(require("fs"));
+const getArg = (key, check) => {
+    const index = process.argv.indexOf(key);
+    if (index < 0)
+        return null;
+    const value = process.argv[index + 1];
+    return check ? (check(value) ? value : null) : value;
+};
+const haveArg = (key) => {
+    const index = process.argv.indexOf(key);
+    return index >= 0;
+};
 const runner = () => __awaiter(void 0, void 0, void 0, function* () {
     const command = process.argv[2];
     switch (command) {
@@ -26,6 +38,32 @@ const runner = () => __awaiter(void 0, void 0, void 0, function* () {
             {
                 const base64 = process.argv[3];
                 console.log(base64 ? CCT_1.default.base64ToUUID(base64) : 'Empty Base64');
+            }
+            break;
+        case 'd':
+        case 'decrypt':
+        case 'e':
+        case 'encrypt':
+            {
+                const filePath = process.argv[3];
+                if (!fs_1.default.existsSync(filePath)) {
+                    console.error(`${filePath} not exists`);
+                    process.exit(1);
+                }
+                const xxtea = getArg('-xxtea', value => !value.startsWith('-'));
+                if (!xxtea) {
+                    console.error(`illegal parameter: -xxtea`);
+                    process.exit(1);
+                }
+                const outFilePath = getArg('-out', value => !value.startsWith('-')) || filePath;
+                const compress = haveArg('-compress') || haveArg('-zip');
+                const cotnent = fs_1.default.readFileSync(filePath);
+                const script = (command === 'd' || command === 'decrypt') ? CCT_1.default.decryptJSC(cotnent, xxtea, compress) : CCT_1.default.encryptJS(cotnent.toString(), xxtea, compress);
+                if (!script) {
+                    console.error(`xxtea error`);
+                    process.exit(2);
+                }
+                fs_1.default.writeFileSync(outFilePath, script);
             }
             break;
         default:
