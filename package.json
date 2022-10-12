@@ -1,6 +1,6 @@
 {
   "name": "cocoscreator-tools",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "./dist/CCT.js",
   "types": "./dist/CCT.d.ts",
