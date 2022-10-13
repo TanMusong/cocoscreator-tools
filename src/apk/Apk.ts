@@ -1,9 +1,9 @@
+import child_process from 'child_process';
+import compressing from 'compressing';
 import fs from 'fs';
 import path from 'path';
-import compressing from 'compressing';
-import child_process from 'child_process';
-import cct from '../CCT';
 import FileUtil from '../common/FileUtil';
+import XXTeaUtil from '../common/XXTeaUtil';
 
 namespace Apk {
 
@@ -19,7 +19,7 @@ namespace Apk {
             let script: string
             if (encrypt) {
                 console.log('decrypt javascript');
-                script = cct.decryptJSC(scriptBuffer, xxtea, compress);
+                script = XXTeaUtil.decryptJSC(scriptBuffer, xxtea, compress);
             }
             else script = scriptBuffer.toString();
 
@@ -28,7 +28,7 @@ namespace Apk {
 
             if (encrypt) {
                 console.log('encrypt javascript');
-                fs.writeFileSync(scriptPath, cct.encryptJS(script, xxtea, compress));
+                fs.writeFileSync(scriptPath, XXTeaUtil.encryptJS(script, xxtea, compress));
             }
             else fs.writeFileSync(scriptPath, script);
         }
