@@ -1,5 +1,6 @@
 # CocosCreator Tools
-
+[![Node.js Package](https://github.com/TanMusong/cocoscreator-tools/actions/workflows/npm-publish-github-packages.yml/badge.svg)](https://github.com/TanMusong/cocoscreator-tools/actions/workflows/npm-publish-github-packages.yml)
+[![NPM version](https://img.shields.io/npm/v/cocoscreator-tools.svg)](https://www.npmjs.com/package/cocoscreator-tools)
 
 ### Install
 ```bash
