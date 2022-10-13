@@ -1,34 +1,136 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const pako_1 = __importDefault(require("pako"));
-const xxtea_node_1 = __importDefault(require("xxtea-node"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const Apk_1 = __importDefault(require("./apk/Apk"));
+const XXTeaUtil_1 = __importDefault(require("./common/XXTeaUtil"));
 const UUID_1 = require("./uuid/UUID");
-var cct;
-(function (cct) {
-    cct.uuidToBase64 = (uuid) => {
-        return (0, UUID_1.UUIDToBase64)(uuid);
-    };
-    cct.base64ToUUID = (base64) => {
-        return (0, UUID_1.Base64ToUUID)(base64);
-    };
-    cct.decryptJSC = (data, key, compress = true) => {
-        const byteKey = xxtea_node_1.default.toBytes(key);
-        let decryptData = xxtea_node_1.default.decrypt(data, byteKey);
-        if (!decryptData)
-            return null;
-        if (compress)
-            decryptData = pako_1.default.ungzip(decryptData);
-        return xxtea_node_1.default.toString(decryptData);
-    };
-    cct.encryptJS = (data, key, compress = true) => {
-        const byteKey = xxtea_node_1.default.toBytes(key);
-        let byteData = xxtea_node_1.default.toBytes(data);
-        if (compress)
-            byteData = pako_1.default.gzip(byteData, { level: 6 });
-        return xxtea_node_1.default.encrypt(byteData, byteKey);
-    };
-})(cct || (cct = {}));
-exports.default = cct;
+const Web_1 = __importDefault(require("./web/Web"));
+const getArg = (key, check) => {
+    const index = process.argv.indexOf(key);
+    if (index < 0)
+        return null;
+    const value = process.argv[index + 1];
+    return check ? (check(value) ? value : null) : value;
+};
+const haveArg = (key) => {
+    const index = process.argv.indexOf(key);
+    return index >= 0;
+};
+const runner = () => __awaiter(void 0, void 0, void 0, function* () {
+    const command = process.argv[2];
+    switch (command) {
+        case 'u2b':
+            {
+                const uuid = process.argv[3];
+                console.log(uuid ? (0, UUID_1.UUIDToBase64)(uuid) : 'Empty UUID');
+            }
+            break;
+        case 'b2u':
+            {
+                const base64 = process.argv[3];
+                console.log(base64 ? (0, UUID_1.Base64ToUUID)(base64) : 'Empty Base64');
+            }
+            break;
+        case 'd':
+        case 'decrypt':
+        case 'e':
+        case 'encrypt':
+            {
+                const filePath = process.argv[3];
+                if (!fs_1.default.existsSync(filePath)) {
+                    console.error(`${filePath} not exists`);
+                    process.exit(1);
+                }
+                const xxtea = getArg('-xxtea', value => value && !value.startsWith('-'));
+                if (!xxtea) {
+                    console.error(`illegal parameter: -xxtea`);
+                    process.exit(1);
+                }
+                const outFilePath = getArg('-out', value => value && !value.startsWith('-')) || filePath;
+                const compress = haveArg('-compress') || haveArg('-zip');
+                const cotnent = fs_1.default.readFileSync(filePath);
+                const script = (command === 'd' || command === 'decrypt') ?
+                    XXTeaUtil_1.default.decryptJSC(cotnent, xxtea, compress) :
+                    XXTeaUtil_1.default.encryptJS(cotnent.toString(), xxtea, compress);
+                if (!script) {
+                    console.error(`xxtea error`);
+                    process.exit(2);
+                }
+                fs_1.default.writeFileSync(outFilePath, script);
+            }
+            break;
+        case 'apk':
+            {
+                const apkPath = process.argv[3];
+                if (!fs_1.default.existsSync(apkPath))
+                    process.exit(1);
+                const output = getArg('-output', value => !value.startsWith('-'));
+                if (!output)
+                    process.exit(1);
+                let keystore, storepass, alias, keypass;
+                keystore = getArg('-keystore', value => !value.startsWith('-'));
+                if (keystore) {
+                    storepass = getArg('-storepass', value => !value.startsWith('-'));
+                    if (!storepass)
+                        process.exit(1);
+                    alias = getArg('-alias', value => !value.startsWith('-'));
+                    if (!alias)
+                        process.exit(1);
+                    keypass = getArg('-keypass', value => !value.startsWith('-'));
+                    if (!keypass)
+                        process.exit(1);
+                }
+                else {
+                    //keytool -genkey -keyalg RSA -keysize 1024 -validity 3650 -keystore debug.keystore -storepass 123456 -alias tms -keypass 123456 -dname CN=TanMusong,OU=TanMusong,O=TanMusong,L=Beijing,S=Beijing,C=CN
+                    keystore = path_1.default.join(__dirname, '..', '..', 'keystore', 'debug.keystore');
+                    storepass = '123456';
+                    alias = 'tms';
+                    keypass = '123456';
+                }
+                const unpackedAPK = yield Apk_1.default.Unpack(apkPath);
+                if (haveArg('-log')) {
+                    const xxtea = getArg('-xxtea', value => !value.startsWith('-'));
+                    const compress = haveArg('-compress') || haveArg('-zip');
+                    unpackedAPK.openCCLog(xxtea, compress);
+                }
+                yield unpackedAPK.pack(output, keystore, storepass, alias, keypass);
+                unpackedAPK.clean();
+            }
+            break;
+        case 'web':
+            const projectPath = process.argv[3];
+            if (!fs_1.default.existsSync(projectPath))
+                process.exit(1);
+            if (haveArg('-resize-image')) {
+                const scale = getArg('-resize-image', value => { try {
+                    parseFloat(value);
+                    return true;
+                }
+                catch (e) {
+                    return false;
+                } });
+                if (!scale) {
+                    process.exit(1);
+                }
+                Web_1.default.ScaleImages(projectPath, parseFloat(scale));
+            }
+            break;
+        default:
+            console.error(`Error Command: ${command}`);
+            process.exit(1);
+    }
+});
+runner();
