@@ -18,6 +18,7 @@ const Apk_1 = __importDefault(require("./apk/Apk"));
 const XXTeaUtil_1 = __importDefault(require("./common/XXTeaUtil"));
 const UUID_1 = require("./uuid/UUID");
 const Web_1 = __importDefault(require("./web/Web"));
+const DEFAULT_CONFIG_FILE = 'global_config.json';
 const getArg = (key, check) => {
     const index = process.argv.indexOf(key);
     if (index < 0)
@@ -30,6 +31,8 @@ const haveArg = (key) => {
     return index >= 0;
 };
 const runner = () => __awaiter(void 0, void 0, void 0, function* () {
+    const defaultConfigPath = path_1.default.join(__dirname, DEFAULT_CONFIG_FILE);
+    const defaultConfig = fs_1.default.existsSync(defaultConfigPath) ? JSON.parse(fs_1.default.readFileSync(defaultConfigPath).toString()) : {};
     const command = process.argv[2];
     switch (command) {
         case 'u2b':
@@ -54,13 +57,13 @@ const runner = () => __awaiter(void 0, void 0, void 0, function* () {
                     console.error(`${filePath} not exists`);
                     process.exit(1);
                 }
-                const xxtea = getArg('-xxtea', value => value && !value.startsWith('-'));
+                const xxtea = getArg('-xxtea', value => value && !value.startsWith('-')) || defaultConfig.xxtea;
                 if (!xxtea) {
                     console.error(`illegal parameter: -xxtea`);
                     process.exit(1);
                 }
                 const outFilePath = getArg('-out', value => value && !value.startsWith('-')) || filePath;
-                const compress = haveArg('-compress') || haveArg('-zip');
+                const compress = haveArg('-compress') || haveArg('-zip') || defaultConfig.compress;
                 const cotnent = fs_1.default.readFileSync(filePath);
                 const script = (command === 'd' || command === 'decrypt') ?
                     XXTeaUtil_1.default.decryptJSC(cotnent, xxtea, compress) :
@@ -81,15 +84,15 @@ const runner = () => __awaiter(void 0, void 0, void 0, function* () {
                 if (!output)
                     process.exit(1);
                 let keystore, storepass, alias, keypass;
-                keystore = getArg('-keystore', value => !value.startsWith('-'));
+                keystore = getArg('-keystore', value => !value.startsWith('-')) || defaultConfig.keystore;
                 if (keystore) {
-                    storepass = getArg('-storepass', value => !value.startsWith('-'));
+                    storepass = getArg('-storepass', value => !value.startsWith('-')) || defaultConfig.storepass;
                     if (!storepass)
                         process.exit(1);
-                    alias = getArg('-alias', value => !value.startsWith('-'));
+                    alias = getArg('-alias', value => !value.startsWith('-')) || defaultConfig.alias;
                     if (!alias)
                         process.exit(1);
-                    keypass = getArg('-keypass', value => !value.startsWith('-'));
+                    keypass = getArg('-keypass', value => !value.startsWith('-')) || defaultConfig.keypass;
                     if (!keypass)
                         process.exit(1);
                 }
@@ -111,21 +114,55 @@ const runner = () => __awaiter(void 0, void 0, void 0, function* () {
             }
             break;
         case 'web':
-            const projectPath = process.argv[3];
-            if (!fs_1.default.existsSync(projectPath))
-                process.exit(1);
-            if (haveArg('-resize-image')) {
-                const scale = getArg('-resize-image', value => { try {
-                    parseFloat(value);
-                    return true;
-                }
-                catch (e) {
-                    return false;
-                } });
-                if (!scale) {
+            {
+                const projectPath = process.argv[3];
+                if (!fs_1.default.existsSync(projectPath))
                     process.exit(1);
+                if (haveArg('-resize-image')) {
+                    const scale = getArg('-resize-image', value => { try {
+                        parseFloat(value);
+                        return true;
+                    }
+                    catch (e) {
+                        return false;
+                    } });
+                    if (!scale) {
+                        process.exit(1);
+                    }
+                    Web_1.default.ScaleImages(projectPath, parseFloat(scale));
                 }
-                Web_1.default.ScaleImages(projectPath, parseFloat(scale));
+            }
+            break;
+        case 'config':
+            {
+                const commandType = process.argv[3];
+                switch (commandType) {
+                    case 'set':
+                        defaultConfig.xxtea = getArg('-xxtea', value => value && !value.startsWith('-')) || defaultConfig.xxtea;
+                        defaultConfig.keystore = getArg('-keystore', value => value && !value.startsWith('-')) || defaultConfig.keystore;
+                        defaultConfig.storepass = getArg('-storepass', value => value && !value.startsWith('-')) || defaultConfig.storepass;
+                        defaultConfig.alias = getArg('-alias', value => value && !value.startsWith('-')) || defaultConfig.alias;
+                        defaultConfig.keypass = getArg('-keypass', value => value && !value.startsWith('-')) || defaultConfig.keypass;
+                        const compressArg = getArg('-compress', value => value && (value === 'true' || value === 'false')) || getArg('-zip', value => value && (value === 'true' || value === 'false'));
+                        defaultConfig.compress = compressArg ? (compressArg === 'true') : defaultConfig.compress;
+                        break;
+                    case 'get':
+                        const argName = process.argv[3];
+                        if (argName)
+                            console.log(defaultConfig[argName]);
+                        else
+                            console.log(JSON.stringify(defaultConfig));
+                        break;
+                    case 'del':
+                        haveArg('-xxtea') && delete defaultConfig.xxtea;
+                        haveArg('-keystore') && delete defaultConfig.keystore;
+                        haveArg('-storepass') && delete defaultConfig.storepass;
+                        haveArg('-alias') && delete defaultConfig.alias;
+                        haveArg('-keypass') && delete defaultConfig.keypass;
+                        (haveArg('-compress') || haveArg('-zip')) && delete defaultConfig.compress;
+                        break;
+                }
+                fs_1.default.writeFileSync(defaultConfigPath, JSON.stringify(defaultConfig));
             }
             break;
         default:

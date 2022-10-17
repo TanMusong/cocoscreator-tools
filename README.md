@@ -31,4 +31,15 @@ cct apk <apk path> \ #cocos creator apk修改
         -alias <keystore alias> \ #仅在传入-keystore时需要
         -keypass <keystore alias password> \ #仅在传入-keystore时需要
         -log #修改log配置，用于release包强制打开日志
+
+cct web <build out> \ #缩放Web构建后的图片，再在游戏中加载放大。用于发布对效果要求不高德广告情况下，压缩包体
+        -resize-image <scale number>
+
+# 保存默认配置，之后的命令未输入相关参数时使用默认配置
+cct config set -xxtea|-keystore|-storepass|-alias|-keypass value
+cct config set -compress true|false
+
+cct config del -xxtea|-keystore|-storepass|-alias|-keypass|-compress # 删除默认配置
+cct config get -xxtea|-keystore|-storepass|-alias|-keypass|-compress # 显示默认配置，不输入key则显示全部
+
 ```
