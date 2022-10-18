@@ -5,7 +5,16 @@ import XXTeaUtil from "./common/XXTeaUtil";
 import { Base64ToUUID, UUIDToBase64 } from "./uuid/UUID";
 import Web from "./web/Web";
 
-const DEFAULT_CONFIG_FILE = 'global_config.json';
+const DEFAULT_CONFIG_FILE = 'cct_default_config.json';
+const DEFAULT_CONFIG_KEY_MAP = {
+    '-xxtea': 'xxtea',
+    '-keystore': 'keystore',
+    '-storepass': 'storepass',
+    '-alias': 'alias',
+    '-keypass': 'keypass',
+    '-compress': 'compress',
+    '-zip': 'compress',
+}
 
 const getArg = (key: string, check?: (value: string) => boolean): string | null => {
     const index = process.argv.indexOf(key);
@@ -21,7 +30,7 @@ const haveArg = (key: string): boolean => {
 
 const runner = async (): Promise<void> => {
 
-    const defaultConfigPath = path.join(__dirname, DEFAULT_CONFIG_FILE)
+    const defaultConfigPath = path.join(__dirname, '..', '..', DEFAULT_CONFIG_FILE)
     const defaultConfig: Record<string, string | number | boolean> = fs.existsSync(defaultConfigPath) ? JSON.parse(fs.readFileSync(defaultConfigPath).toString()) : {};
 
     const command = process.argv[2];
@@ -130,17 +139,17 @@ const runner = async (): Promise<void> => {
                         defaultConfig.compress = compressArg ? (compressArg === 'true') : defaultConfig.compress;
                         break;
                     case 'get':
-                        const argName = process.argv[3];
-                        if (argName) console.log(defaultConfig[argName]);
+                        const argName = process.argv[4];
+                        const configKey = DEFAULT_CONFIG_KEY_MAP[argName];
+                        if (configKey) console.log(defaultConfig[configKey]);
+                        else if (argName) console.log(`error arg name: ${argName}`);
                         else console.log(JSON.stringify(defaultConfig));
                         break;
                     case 'del':
-                        haveArg('-xxtea') && delete defaultConfig.xxtea;
-                        haveArg('-keystore') && delete defaultConfig.keystore;
-                        haveArg('-storepass') && delete defaultConfig.storepass;
-                        haveArg('-alias') && delete defaultConfig.alias;
-                        haveArg('-keypass') && delete defaultConfig.keypass;
-                        (haveArg('-compress') || haveArg('-zip')) && delete defaultConfig.compress;
+                        for (const key in DEFAULT_CONFIG_KEY_MAP) {
+                            haveArg(key) && delete defaultConfig[DEFAULT_CONFIG_KEY_MAP[key]];
+                        }
+
                         break;
                 }
                 fs.writeFileSync(defaultConfigPath, JSON.stringify(defaultConfig));
