@@ -18,7 +18,7 @@ const Apk_1 = __importDefault(require("./apk/Apk"));
 const XXTeaUtil_1 = __importDefault(require("./common/XXTeaUtil"));
 const UUID_1 = require("./uuid/UUID");
 const Web_1 = __importDefault(require("./web/Web"));
-const DEFAULT_CONFIG_FILE = 'global_config.json';
+const DEFAULT_CONFIG_FILE = 'cct_default_config.json';
 const DEFAULT_CONFIG_KEY_MAP = {
     '-xxtea': 'xxtea',
     '-keystore': 'keystore',
@@ -40,7 +40,7 @@ const haveArg = (key) => {
     return index >= 0;
 };
 const runner = () => __awaiter(void 0, void 0, void 0, function* () {
-    const defaultConfigPath = path_1.default.join(__dirname, DEFAULT_CONFIG_FILE);
+    const defaultConfigPath = path_1.default.join(__dirname, '..', '..', DEFAULT_CONFIG_FILE);
     const defaultConfig = fs_1.default.existsSync(defaultConfigPath) ? JSON.parse(fs_1.default.readFileSync(defaultConfigPath).toString()) : {};
     const command = process.argv[2];
     switch (command) {
