@@ -84,42 +84,62 @@ const runner = () => __awaiter(void 0, void 0, void 0, function* () {
                 fs_1.default.writeFileSync(outFilePath, script);
             }
             break;
-        case 'apk':
+        case 'p':
+        case 'pack':
             {
-                const apkPath = process.argv[3];
-                if (!fs_1.default.existsSync(apkPath))
-                    process.exit(1);
+                const apkAssetsPath = process.argv[3];
+                if (!fs_1.default.existsSync(apkAssetsPath)) {
+                    console.error(`Apk assets: '${apkAssetsPath}' not exists`);
+                    process.exit(2);
+                }
                 const output = getArg('-output', value => !value.startsWith('-'));
-                if (!output)
-                    process.exit(1);
+                if (!output) {
+                    console.error(`illegal parameter: -output`);
+                    process.exit(2);
+                }
                 let keystore, storepass, alias, keypass;
                 keystore = getArg('-keystore', value => !value.startsWith('-')) || defaultConfig.keystore;
                 if (keystore) {
                     storepass = getArg('-storepass', value => !value.startsWith('-')) || defaultConfig.storepass;
-                    if (!storepass)
-                        process.exit(1);
+                    if (!storepass) {
+                        console.error(`illegal parameter: -storepass`);
+                        process.exit(2);
+                    }
                     alias = getArg('-alias', value => !value.startsWith('-')) || defaultConfig.alias;
-                    if (!alias)
-                        process.exit(1);
+                    if (!alias) {
+                        console.error(`illegal parameter: -alias`);
+                        process.exit(2);
+                    }
                     keypass = getArg('-keypass', value => !value.startsWith('-')) || defaultConfig.keypass;
-                    if (!keypass)
-                        process.exit(1);
+                    if (!keypass) {
+                        console.error(`illegal parameter: -keypass`);
+                        process.exit(2);
+                    }
                 }
                 else {
                     //keytool -genkey -keyalg RSA -keysize 1024 -validity 3650 -keystore debug.keystore -storepass 123456 -alias tms -keypass 123456 -dname CN=TanMusong,OU=TanMusong,O=TanMusong,L=Beijing,S=Beijing,C=CN
-                    keystore = path_1.default.join(__dirname, '..', '..', 'keystore', 'debug.keystore');
+                    keystore = path_1.default.join(__dirname, '..', 'keystore', 'debug.keystore');
                     storepass = '123456';
                     alias = 'tms';
                     keypass = '123456';
                 }
-                const unpackedAPK = yield Apk_1.default.Unpack(apkPath);
-                if (haveArg('-log')) {
-                    const xxtea = getArg('-xxtea', value => !value.startsWith('-'));
-                    const compress = haveArg('-compress') || haveArg('-zip');
-                    unpackedAPK.openCCLog(xxtea, compress);
+                yield Apk_1.default.Pack(apkAssetsPath, output, keystore, storepass, alias, keypass);
+            }
+            break;
+        case 'up':
+        case 'unpack':
+            {
+                const apkPath = process.argv[3];
+                if (!fs_1.default.existsSync(apkPath)) {
+                    console.error(`Apk: '${apkPath}' not exists`);
+                    process.exit(2);
                 }
-                yield unpackedAPK.pack(output, keystore, storepass, alias, keypass);
-                unpackedAPK.clean();
+                const output = getArg('-output', value => !value.startsWith('-'));
+                if (!output) {
+                    console.error(`illegal parameter: -output`);
+                    process.exit(2);
+                }
+                yield Apk_1.default.Unpack(apkPath, output);
             }
             break;
         case 'web':

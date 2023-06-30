@@ -1,7 +1,8 @@
 import pako from "pako";
 import xxtea from 'xxtea-node';
-namespace XXTeaUtil {
+import compressing from 'compressing';
 
+namespace XXTeaUtil {
 
     export const decryptJSC = (data: Buffer, key: string, compress: boolean = true): string | null => {
         const byteKey = xxtea.toBytes(key);

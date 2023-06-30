@@ -1,6 +1,6 @@
 {
   "name": "cocoscreator-tools",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "",
   "scripts": {
     "build": "tsc"
@@ -27,10 +27,10 @@
   "dependencies": {
     "compressing": "^1.6.2",
     "fs": "^0.0.1-security",
-    "pako": "^2.0.4",
+    "pako": "^2.1.0",
     "path": "^0.12.7",
     "sharp": "^0.31.1",
-    "xxtea-node": "^1.1.4"
+    "xxtea-node": "^1.1.5"
   },
   "bin": {
     "cct": "./bin/cct"
