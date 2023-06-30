@@ -21,16 +21,16 @@ cct u2b <uuid> #uuid转base64
 cct b2u <base64> #base64转uuid
 
 # 实验性功能，完善中
-# 目前仅基于Windows 11系统下CocosCreator 2.4.8创建的简单的Android测试项目进行开发测试，不保证有效
-cct apk <apk path> \ #cocos creator apk修改
-        -out <output apk path> \
-        -compress|-zip \ #可选，标记该js是否被压缩
-        -xxtea <xxtea key> \
+
+cct up|unpack <apk path> \ #apk解包
+        -output <output apk assets path> \
+
+cct p|pack <apk assets path> \ #apk打包
+        -output <output apk path> \
         -keystore <keystore path> \ #可选，不传将使用工具内debug.keystore
         -storepass <keystore password> \ #仅在传入-keystore时需要
         -alias <keystore alias> \ #仅在传入-keystore时需要
         -keypass <keystore alias password> \ #仅在传入-keystore时需要
-        -log #修改log配置，用于release包强制打开日志
 
 cct web <build out> \ #缩放Web构建后的图片，再在游戏中加载放大。用于发布对效果要求不高德广告情况下，压缩包体
         -resize-image <scale number>
