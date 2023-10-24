@@ -113,7 +113,7 @@ const runner = async (): Promise<void> => {
                     //keytool -genkey -keyalg RSA -keysize 1024 -validity 3650 -keystore debug.keystore -storepass 123456 -alias tms -keypass 123456 -dname CN=TanMusong,OU=TanMusong,O=TanMusong,L=Beijing,S=Beijing,C=CN
                     keystore = path.join(__dirname, '..', 'keystore', 'debug.keystore');
                     storepass = '123456';
-                    alias = 'tms';
+                    alias = 'debug_keystore';
                     keypass = '123456'
                 }
                 await Apk.Pack(apkAssetsPath, output, keystore, storepass, alias, keypass)
