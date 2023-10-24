@@ -1,13 +1,14 @@
 # CocosCreator Tools
 [![Node.js Package](https://github.com/TanMusong/cocoscreator-tools/actions/workflows/npm-publish-github-packages.yml/badge.svg)](https://github.com/TanMusong/cocoscreator-tools/actions/workflows/npm-publish-github-packages.yml)
 [![NPM version](https://img.shields.io/npm/v/cocoscreator-tools.svg)](https://www.npmjs.com/package/cocoscreator-tools)
+Cocos Creator命令行工具集。
 
 ### Install
 ```bash
 npm install -g cocoscreator-tools
 ```
-### Usage
 
+### Usage
 ```bash
 cct d|decrypt <jsc file path> #解密jsc
         -xxtea <xxtea key> \
@@ -20,8 +21,7 @@ cct e|encrypt <js file path> \ #加密js
 cct u2b <uuid> #uuid转base64
 cct b2u <base64> #base64转uuid
 
-# 实验性功能，完善中
-
+# 以下为实验性功能，可能存在较多Bug，完善中
 cct up|unpack <apk path> \ #apk解包
         -output <output apk assets path> \
 
@@ -32,7 +32,7 @@ cct p|pack <apk assets path> \ #apk打包
         -alias <keystore alias> \ #仅在传入-keystore时需要
         -keypass <keystore alias password> \ #仅在传入-keystore时需要
 
-cct web <build out> \ #缩放Web构建后的图片，再在游戏中加载放大。用于发布对效果要求不高德广告情况下，压缩包体
+cct web <build out> \ #缩放Web构建后的图片，再在游戏中加载放大。用于发布对效果要求不高的广告情况下，压缩包体
         -resize-image <scale number>
 
 # 保存默认配置，之后的命令未输入相关参数时使用默认配置
