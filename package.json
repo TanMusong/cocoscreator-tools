@@ -1,6 +1,6 @@
 {
   "name": "cocoscreator-tools",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "",
   "scripts": {
     "build": "tsc"
@@ -22,14 +22,20 @@
     "@types/node": "^18.8.4",
     "@types/pako": "^2.0.0",
     "@types/sharp": "^0.31.0",
+    "@types/uglify-js": "^3.17.5",
     "typescript": "^4.8.4"
   },
   "dependencies": {
     "compressing": "^1.6.2",
+    "crypto": "^1.0.1",
     "fs": "^0.0.1-security",
+    "https": "^1.0.0",
+    "javascript-obfuscator": "^4.1.1",
     "pako": "^2.1.0",
     "path": "^0.12.7",
-    "sharp": "^0.31.1",
+    "sharp": "^0.33.5",
+    "tinify": "^1.7.1",
+    "uglify-js": "^3.19.2",
     "xxtea-node": "^1.1.5"
   },
   "bin": {

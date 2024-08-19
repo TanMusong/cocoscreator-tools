@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 
-
 namespace FileUtil {
 
     export function copy(srcFileOrDir: string, destFileOrDir: string): void {
