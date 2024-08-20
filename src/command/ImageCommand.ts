@@ -2,10 +2,10 @@ import crypto from "crypto";
 import fs from "fs";
 import https from 'https';
 import path from "path";
-import tinify from "tinify";
+// import tinify from "tinify";
 import Command from "./Command";
 
-const TINIFY_KEYS = [""];
+// const TINIFY_KEYS = [""];
 
 const TINYIMG_URL = [
     "tinyjpg.com",
@@ -81,7 +81,7 @@ export default class ImageCommand extends Command {
                         return sizeChange;
                     }
                 } else {
-                    const compressSize = await this.compressWithTinify(url, oldSize) || await this.compressWithWebAPI(url, oldSize);
+                    const compressSize = /*await this.compressWithTinify(url, oldSize) || */await this.compressWithWebAPI(url, oldSize);
                     if (compressSize) {
                         this.saveCache(md5, url);
                         const sizeChange = compressSize - oldSize;
@@ -125,32 +125,32 @@ export default class ImageCommand extends Command {
         return result;
     }
 
-    private async compressWithTinify(url: string, sourceSize: number): Promise<number> {
-        if (this.tinifyKeyIndex >= TINIFY_KEYS.length) return 0;
-        let result = 0;
-        for (; this.tinifyKeyIndex < TINIFY_KEYS.length;) {
-            tinify.key = TINIFY_KEYS[this.tinifyKeyIndex];
-            try {
-                const size = sourceSize || fs.statSync(url).size;
-                const cacheUrl = `${url}.cache`;
-                await tinify.fromFile(url).toFile(cacheUrl);
-                const newSize = fs.statSync(cacheUrl).size;
-                if (newSize < size) {
-                    fs.rmSync(url);
-                    fs.renameSync(cacheUrl, url);
-                    result = newSize;
+    // private async compressWithTinify(url: string, sourceSize: number): Promise<number> {
+    //     if (this.tinifyKeyIndex >= TINIFY_KEYS.length) return 0;
+    //     let result = 0;
+    //     for (; this.tinifyKeyIndex < TINIFY_KEYS.length;) {
+    //         tinify.key = TINIFY_KEYS[this.tinifyKeyIndex];
+    //         try {
+    //             const size = sourceSize || fs.statSync(url).size;
+    //             const cacheUrl = `${url}.cache`;
+    //             await tinify.fromFile(url).toFile(cacheUrl);
+    //             const newSize = fs.statSync(cacheUrl).size;
+    //             if (newSize < size) {
+    //                 fs.rmSync(url);
+    //                 fs.renameSync(cacheUrl, url);
+    //                 result = newSize;
 
-                } else {
-                    fs.rmSync(cacheUrl);
-                    result = size;
-                }
-                break;
-            } catch (error) {
-                this.tinifyKeyIndex++;
-            }
-        }
-        return result;
-    }
+    //             } else {
+    //                 fs.rmSync(cacheUrl);
+    //                 result = size;
+    //             }
+    //             break;
+    //         } catch (error) {
+    //             this.tinifyKeyIndex++;
+    //         }
+    //     }
+    //     return result;
+    // }
 
     private findCache(md5: string): string | null {
         if (!fs.existsSync(this.cacheDirUrl)) return null;
