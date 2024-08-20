@@ -17,7 +17,7 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const javascript_obfuscator_1 = __importDefault(require("javascript-obfuscator"));
 const uglify_js_1 = __importDefault(require("uglify-js"));
-const OBFUSCATE_LIMIT = 2; //MB
+const OBFUSCATE_LIMIT = 0; //MB
 class ScriptCommand extends Command_1.default {
     execute(command) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -33,14 +33,27 @@ class ScriptCommand extends Command_1.default {
             }
             let obfuscateCfg = undefined;
             if (obfuscate && configPath) {
-                if (fs_1.default.existsSync(configPath)) {
-                    try {
-                        const configFileContent = fs_1.default.readFileSync(configPath, { encoding: 'utf-8' });
-                        obfuscateCfg = JSON.parse(configFileContent);
-                    }
-                    catch (e) {
+                try {
+                    switch (true) {
+                        case configPath === 'low':
+                        case configPath === 'medium':
+                        case configPath === 'high':
+                        case configPath === 'default':
+                            {
+                                const url = path_1.default.join(__dirname, '..', '..', 'data', 'script', `obfuscator_config_${configPath}.json`);
+                                const configFileContent = fs_1.default.readFileSync(url, { encoding: 'utf-8' });
+                                obfuscateCfg = JSON.parse(configFileContent);
+                            }
+                            break;
+                        case fs_1.default.existsSync(configPath):
+                            {
+                                const configFileContent = fs_1.default.readFileSync(configPath, { encoding: 'utf-8' });
+                                obfuscateCfg = JSON.parse(configFileContent);
+                            }
+                            break;
                     }
                 }
+                catch (e) { }
                 if (!obfuscateCfg)
                     console.log(`混淆配置文件${configPath}不存在或格式错误，使用默认配置`);
             }
@@ -67,7 +80,7 @@ class ScriptCommand extends Command_1.default {
             const oldSize = stat.size;
             let calculateSize = oldSize;
             let log = `${fileUrl}修改完成: `;
-            if (obfuscate && obfuscateCfg) {
+            if (obfuscate) {
                 if (OBFUSCATE_LIMIT > 0 && calculateSize > OBFUSCATE_LIMIT * 1024 * 1024) {
                     log += `文件超过${OBFUSCATE_LIMIT}MB, 跳过混淆; `;
                 }

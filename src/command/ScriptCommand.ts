@@ -4,7 +4,7 @@ import path from "path";
 import JavaScriptObfuscator from 'javascript-obfuscator';
 import UglifyJS from "uglify-js";
 
-const OBFUSCATE_LIMIT = 2;//MB
+const OBFUSCATE_LIMIT = 0;//MB
 
 
 export default class ScriptCommand extends Command {
@@ -21,13 +21,26 @@ export default class ScriptCommand extends Command {
         }
         let obfuscateCfg: JavaScriptObfuscator.ObfuscatorOptions = undefined;
         if (obfuscate && configPath) {
-            if (fs.existsSync(configPath)) {
-                try {
-                    const configFileContent = fs.readFileSync(configPath, { encoding: 'utf-8' });
-                    obfuscateCfg = JSON.parse(configFileContent);
-                } catch (e) {
+            try {
+                switch (true) {
+                    case configPath === 'low':
+                    case configPath === 'medium':
+                    case configPath === 'high':
+                    case configPath === 'default':
+                        {
+                            const url = path.join(__dirname, '..', '..', 'data', 'script', `obfuscator_config_${configPath}.json`)
+                            const configFileContent = fs.readFileSync(url, { encoding: 'utf-8' });
+                            obfuscateCfg = JSON.parse(configFileContent);
+                        }
+                        break;
+                    case fs.existsSync(configPath):
+                        {
+                            const configFileContent = fs.readFileSync(configPath, { encoding: 'utf-8' });
+                            obfuscateCfg = JSON.parse(configFileContent);
+                        }
+                        break;
                 }
-            }
+            } catch (e) { }
             if (!obfuscateCfg) console.log(`混淆配置文件${configPath}不存在或格式错误，使用默认配置`);
         }
         console.log(`开始执行${[obfuscate ? "JS混淆" : "", compress ? "JS压缩" : ""].filter(v => v).join(", ")}`);
@@ -52,7 +65,7 @@ export default class ScriptCommand extends Command {
             const oldSize = stat.size;
             let calculateSize = oldSize;
             let log = `${fileUrl}修改完成: `
-            if (obfuscate && obfuscateCfg) {
+            if (obfuscate) {
                 if (OBFUSCATE_LIMIT > 0 && calculateSize > OBFUSCATE_LIMIT * 1024 * 1024) {
                     log += `文件超过${OBFUSCATE_LIMIT}MB, 跳过混淆; `;
                 } else {
