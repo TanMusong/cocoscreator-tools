@@ -35,12 +35,14 @@ export default class ConfigCommand extends Command {
         const storepass = this.getStringArg('-storepass');
         const alias = this.getStringArg('-alias');
         const keypass = this.getStringArg('-keypass');
+        const cache = this.getStringArg('-cache');
         const compress = this.getBooleanArg('-compress');
         (xxtea !== undefined) && Config.getInstance().set('xxtea', xxtea);
         (keystore !== undefined) && Config.getInstance().set('keystore', keystore);
         (storepass !== undefined) && Config.getInstance().set('storepass', storepass);
         (alias !== undefined) && Config.getInstance().set('alias', alias);
         (keypass !== undefined) && Config.getInstance().set('keypass', keypass);
+        (cache !== undefined) && Config.getInstance().set('cache', cache);
         (compress !== undefined) && Config.getInstance().set('compress', compress);
     }
 

@@ -1,9 +1,11 @@
 import crypto from "crypto";
 import fs from "fs";
 import https from 'https';
-import path from "path";
+import path, { win32 } from "path";
 // import tinify from "tinify";
 import Command from "./Command";
+import { homedir } from "os";
+import Config from "../config/Config";
 
 // const TINIFY_KEYS = [""];
 
@@ -28,9 +30,10 @@ export default class ImageCommand extends Command {
         const projectPath = process.argv[3];
         if (!fs.existsSync(projectPath)) process.exit(1);
 
-        let cacheDir = this.getStringArg('-cache');
+        let cacheDir = this.getStringArg('-cache') || Config.getInstance().get('cache') as string;
         if (!cacheDir) {
-            cacheDir = path.join(projectPath, '..', CACHE_DIR);
+            cacheDir = path.join(__dirname, '..', '..', CACHE_DIR);
+            fs.mkdirSync(cacheDir, { recursive: true });
             console.log(`未指定缓存目录，使用默认目录${path.normalize(cacheDir)}`);
         }
 

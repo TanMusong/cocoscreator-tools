@@ -1,6 +1,6 @@
 {
   "name": "cocoscreator-tools",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "",
   "scripts": {
     "build": "tsc"
@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/TanMusong/cocoscreator-tools#readme",
   "devDependencies": {
-    "@types/node": "^18.8.4",
+    "@types/node": "^18.19.65",
     "@types/pako": "^2.0.0",
     "@types/sharp": "^0.31.0",
     "@types/uglify-js": "^3.17.5",
@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "compressing": "^1.10.1",
-    "crypto": "^1.0.1",
     "fs": "^0.0.1-security",
     "https": "^1.0.0",
     "javascript-obfuscator": "^4.1.1",

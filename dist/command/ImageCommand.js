@@ -18,6 +18,7 @@ const https_1 = __importDefault(require("https"));
 const path_1 = __importDefault(require("path"));
 // import tinify from "tinify";
 const Command_1 = __importDefault(require("./Command"));
+const Config_1 = __importDefault(require("../config/Config"));
 // const TINIFY_KEYS = [""];
 const TINYIMG_URL = [
     "tinyjpg.com",
@@ -33,9 +34,10 @@ class ImageCommand extends Command_1.default {
             const projectPath = process.argv[3];
             if (!fs_1.default.existsSync(projectPath))
                 process.exit(1);
-            let cacheDir = this.getStringArg('-cache');
+            let cacheDir = this.getStringArg('-cache') || Config_1.default.getInstance().get('cache');
             if (!cacheDir) {
-                cacheDir = path_1.default.join(projectPath, '..', CACHE_DIR);
+                cacheDir = path_1.default.join(__dirname, '..', '..', CACHE_DIR);
+                fs_1.default.mkdirSync(cacheDir, { recursive: true });
                 console.log(`未指定缓存目录，使用默认目录${path_1.default.normalize(cacheDir)}`);
             }
             this.hostnameIndex = 0;
