@@ -9,6 +9,7 @@ const DEFAULT_CONFIG_KEY_MAP = {
     '-keypass': 'keypass',
     '-compress': 'compress',
     '-zip': 'compress',
+    '-cache': 'cache'
 }
 
 

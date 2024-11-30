@@ -15,11 +15,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const crypto_1 = __importDefault(require("crypto"));
 const fs_1 = __importDefault(require("fs"));
 const https_1 = __importDefault(require("https"));
+const os_1 = __importDefault(require("os"));
 const path_1 = __importDefault(require("path"));
 // import tinify from "tinify";
-const Command_1 = __importDefault(require("./Command"));
 const Config_1 = __importDefault(require("../config/Config"));
-// const TINIFY_KEYS = [""];
+const Command_1 = __importDefault(require("./Command"));
+const TINIFY_KEYS = [""];
 const TINYIMG_URL = [
     "tinyjpg.com",
     "tinypng.com",
@@ -36,10 +37,12 @@ class ImageCommand extends Command_1.default {
                 process.exit(1);
             let cacheDir = this.getStringArg('-cache') || Config_1.default.getInstance().get('cache');
             if (!cacheDir) {
-                cacheDir = path_1.default.join(__dirname, '..', '..', CACHE_DIR);
-                fs_1.default.mkdirSync(cacheDir, { recursive: true });
+                cacheDir = path_1.default.join(os_1.default.homedir(), '..', '..', CACHE_DIR);
+                fs_1.default.existsSync(cacheDir) || fs_1.default.mkdirSync(cacheDir, { recursive: true });
                 console.log(`未指定缓存目录，使用默认目录${path_1.default.normalize(cacheDir)}`);
             }
+            this.tempDirUrl = path_1.default.join(cacheDir, 'temp');
+            fs_1.default.existsSync(this.tempDirUrl) || fs_1.default.mkdirSync(this.tempDirUrl, { recursive: true });
             this.hostnameIndex = 0;
             this.tinifyKeyIndex = 0;
             this.cacheDirUrl = cacheDir;
@@ -71,34 +74,28 @@ class ImageCommand extends Command_1.default {
                     const md5 = crypto_1.default.createHash('md5').update(buffer).digest('hex');
                     const cacheUrl = this.findCache(md5);
                     if (cacheUrl) {
-                        fs_1.default.rmSync(url);
-                        fs_1.default.copyFileSync(cacheUrl, url);
-                        const newSize = fs_1.default.statSync(url).size;
-                        if (newSize > oldSize) {
-                            //缓存文件错误，清楚缓存重新压缩
-                            fs_1.default.rmSync(cacheUrl);
-                            return yield this.compressedImage(url);
-                        }
-                        else {
+                        const newSize = fs_1.default.statSync(cacheUrl).size;
+                        if (newSize <= oldSize) {
                             fs_1.default.copyFileSync(cacheUrl, url);
                             const sizeChange = newSize - oldSize;
                             console.log(`${url}使用缓存, 文件大小${sizeChange > 0 ? '增加' : '减少'}${Math.abs(sizeChange / 1024).toFixed(3)}kb`);
-                            fs_1.default.rmSync(url);
-                            return sizeChange;
-                        }
-                    }
-                    else {
-                        const compressSize = /*await this.compressWithTinify(url, oldSize) || */ yield this.compressWithWebAPI(url, oldSize);
-                        if (compressSize) {
-                            this.saveCache(md5, url);
-                            const sizeChange = compressSize - oldSize;
-                            console.log(`${url}压缩成功, 文件大小${sizeChange > 0 ? '增加' : '减少'}${Math.abs(sizeChange / 1024).toFixed(3)}kb`);
                             return sizeChange;
                         }
                         else {
-                            console.log(`${url}压缩失败`);
-                            return 0;
+                            //缓存文件错误，清楚缓存重新压缩
+                            fs_1.default.rmSync(cacheUrl);
                         }
+                    }
+                    const compressSize = /*await this.compressWithTinify(url, oldSize) || */ yield this.compressWithWebAPI(url, oldSize);
+                    if (compressSize) {
+                        this.saveCache(md5, url);
+                        const sizeChange = compressSize - oldSize;
+                        console.log(`${url}压缩成功, 文件大小${sizeChange > 0 ? '增加' : '减少'}${Math.abs(sizeChange / 1024).toFixed(3)}kb`);
+                        return sizeChange;
+                    }
+                    else {
+                        console.log(`${url}压缩失败`);
+                        return 0;
                     }
                 default:
                     return 0;
@@ -111,19 +108,19 @@ class ImageCommand extends Command_1.default {
             for (let i = 0; i < RETRY_TIMES; i++) {
                 try {
                     const size = sourceSize || fs_1.default.statSync(url).size;
-                    const cacheUrl = `${url}.cache`;
+                    const tempUrl = path_1.default.join(this.tempDirUrl, path_1.default.basename(url));
                     const buffer = fs_1.default.readFileSync(url);
                     const data = yield this.upload(buffer);
                     const file = yield this.download(data.output.url);
-                    fs_1.default.writeFileSync(cacheUrl, file, 'binary');
-                    const newSize = fs_1.default.statSync(cacheUrl).size;
+                    fs_1.default.writeFileSync(tempUrl, file, 'binary');
+                    const newSize = fs_1.default.statSync(tempUrl).size;
                     if (newSize < size) {
                         fs_1.default.rmSync(url);
-                        fs_1.default.renameSync(cacheUrl, url);
+                        fs_1.default.renameSync(tempUrl, url);
                         result = newSize;
                     }
                     else {
-                        fs_1.default.rmSync(cacheUrl);
+                        fs_1.default.rmSync(tempUrl);
                         result = size;
                     }
                     break;
@@ -142,15 +139,15 @@ class ImageCommand extends Command_1.default {
     //         tinify.key = TINIFY_KEYS[this.tinifyKeyIndex];
     //         try {
     //             const size = sourceSize || fs.statSync(url).size;
-    //             const cacheUrl = `${url}.cache`;
-    //             await tinify.fromFile(url).toFile(cacheUrl);
-    //             const newSize = fs.statSync(cacheUrl).size;
+    //             const tempUrl = path.join(this.tempDirUrl, path.basename(url));
+    //             await tinify.fromFile(url).toFile(tempUrl);
+    //             const newSize = fs.statSync(tempUrl).size;
     //             if (newSize < size) {
     //                 fs.rmSync(url);
-    //                 fs.renameSync(cacheUrl, url);
+    //                 fs.renameSync(tempUrl, url);
     //                 result = newSize;
     //             } else {
-    //                 fs.rmSync(cacheUrl);
+    //                 fs.rmSync(tempUrl);
     //                 result = size;
     //             }
     //             break;

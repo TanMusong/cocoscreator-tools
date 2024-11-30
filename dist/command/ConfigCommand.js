@@ -22,6 +22,7 @@ const DEFAULT_CONFIG_KEY_MAP = {
     '-keypass': 'keypass',
     '-compress': 'compress',
     '-zip': 'compress',
+    '-cache': 'cache'
 };
 class ConfigCommand extends Command_1.default {
     execute(command) {

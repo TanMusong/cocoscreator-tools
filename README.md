@@ -35,6 +35,9 @@ cct p|pack <apk assets path> \ #apk打包
 cct web <build out> \ #缩放Web构建后的图片，再在游戏中加载放大。用于发布对效果要求不高的广告情况下，压缩包体
         -resize-image <scale number>
 
+cct compress <image path> \#压缩图片
+        -cache <cache path> #缓存目录
+
 # 保存默认配置，之后的命令未输入相关参数时使用默认配置
 cct config set -xxtea|-keystore|-storepass|-alias|-keypass value
 cct config set -compress true|false

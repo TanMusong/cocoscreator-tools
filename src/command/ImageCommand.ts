@@ -1,13 +1,13 @@
 import crypto from "crypto";
 import fs from "fs";
 import https from 'https';
-import path, { win32 } from "path";
+import os from "os";
+import path from "path";
 // import tinify from "tinify";
-import Command from "./Command";
-import { homedir } from "os";
 import Config from "../config/Config";
+import Command from "./Command";
 
-// const TINIFY_KEYS = [""];
+const TINIFY_KEYS = [""];
 
 const TINYIMG_URL = [
     "tinyjpg.com",
@@ -24,6 +24,7 @@ export default class ImageCommand extends Command {
 
     private hostnameIndex: number;
     private cacheDirUrl: string;
+    private tempDirUrl: string;
     private tinifyKeyIndex: number;
 
     public async execute(command: string): Promise<void> {
@@ -32,10 +33,13 @@ export default class ImageCommand extends Command {
 
         let cacheDir = this.getStringArg('-cache') || Config.getInstance().get('cache') as string;
         if (!cacheDir) {
-            cacheDir = path.join(__dirname, '..', '..', CACHE_DIR);
-            fs.mkdirSync(cacheDir, { recursive: true });
+            cacheDir = path.join(os.homedir(), '..', '..', CACHE_DIR);
+            fs.existsSync(cacheDir) || fs.mkdirSync(cacheDir, { recursive: true });
             console.log(`未指定缓存目录，使用默认目录${path.normalize(cacheDir)}`);
         }
+
+        this.tempDirUrl = path.join(cacheDir, 'temp');
+        fs.existsSync(this.tempDirUrl) || fs.mkdirSync(this.tempDirUrl, { recursive: true });
 
         this.hostnameIndex = 0;
         this.tinifyKeyIndex = 0;
@@ -68,33 +72,29 @@ export default class ImageCommand extends Command {
                 const md5 = crypto.createHash('md5').update(buffer).digest('hex');
                 const cacheUrl = this.findCache(md5);
                 if (cacheUrl) {
-                    fs.rmSync(url);
-                    fs.copyFileSync(cacheUrl, url);
-                    const newSize = fs.statSync(url).size;
-                    if (newSize > oldSize) {
-                        //缓存文件错误，清楚缓存重新压缩
-                        fs.rmSync(cacheUrl);
-                        return await this.compressedImage(url);
-                    } else {
+                    const newSize = fs.statSync(cacheUrl).size;
+                    if (newSize <= oldSize) {
                         fs.copyFileSync(cacheUrl, url);
-
                         const sizeChange = newSize - oldSize;
                         console.log(`${url}使用缓存, 文件大小${sizeChange > 0 ? '增加' : '减少'}${Math.abs(sizeChange / 1024).toFixed(3)}kb`);
-                        fs.rmSync(url);
-                        return sizeChange;
-                    }
-                } else {
-                    const compressSize = /*await this.compressWithTinify(url, oldSize) || */await this.compressWithWebAPI(url, oldSize);
-                    if (compressSize) {
-                        this.saveCache(md5, url);
-                        const sizeChange = compressSize - oldSize;
-                        console.log(`${url}压缩成功, 文件大小${sizeChange > 0 ? '增加' : '减少'}${Math.abs(sizeChange / 1024).toFixed(3)}kb`);
                         return sizeChange;
                     } else {
-                        console.log(`${url}压缩失败`);
-                        return 0;
+                        //缓存文件错误，清楚缓存重新压缩
+                        fs.rmSync(cacheUrl);
                     }
                 }
+
+                const compressSize = /*await this.compressWithTinify(url, oldSize) || */await this.compressWithWebAPI(url, oldSize);
+                if (compressSize) {
+                    this.saveCache(md5, url);
+                    const sizeChange = compressSize - oldSize;
+                    console.log(`${url}压缩成功, 文件大小${sizeChange > 0 ? '增加' : '减少'}${Math.abs(sizeChange / 1024).toFixed(3)}kb`);
+                    return sizeChange;
+                } else {
+                    console.log(`${url}压缩失败`);
+                    return 0;
+                }
+
             default:
                 return 0;
         }
@@ -105,19 +105,19 @@ export default class ImageCommand extends Command {
         for (let i = 0; i < RETRY_TIMES; i++) {
             try {
                 const size = sourceSize || fs.statSync(url).size;
-                const cacheUrl = `${url}.cache`;
+                const tempUrl = path.join(this.tempDirUrl, path.basename(url));
                 const buffer = fs.readFileSync(url);
                 const data = await this.upload(buffer);
                 const file = await this.download(data.output.url);
-                fs.writeFileSync(cacheUrl, file, 'binary');
-                const newSize = fs.statSync(cacheUrl).size;
+                fs.writeFileSync(tempUrl, file, 'binary');
+                const newSize = fs.statSync(tempUrl).size;
                 if (newSize < size) {
                     fs.rmSync(url);
-                    fs.renameSync(cacheUrl, url);
+                    fs.renameSync(tempUrl, url);
                     result = newSize;
 
                 } else {
-                    fs.rmSync(cacheUrl);
+                    fs.rmSync(tempUrl);
                     result = size;
                 }
                 break;
@@ -135,16 +135,16 @@ export default class ImageCommand extends Command {
     //         tinify.key = TINIFY_KEYS[this.tinifyKeyIndex];
     //         try {
     //             const size = sourceSize || fs.statSync(url).size;
-    //             const cacheUrl = `${url}.cache`;
-    //             await tinify.fromFile(url).toFile(cacheUrl);
-    //             const newSize = fs.statSync(cacheUrl).size;
+    //             const tempUrl = path.join(this.tempDirUrl, path.basename(url));
+    //             await tinify.fromFile(url).toFile(tempUrl);
+    //             const newSize = fs.statSync(tempUrl).size;
     //             if (newSize < size) {
     //                 fs.rmSync(url);
-    //                 fs.renameSync(cacheUrl, url);
+    //                 fs.renameSync(tempUrl, url);
     //                 result = newSize;
 
     //             } else {
-    //                 fs.rmSync(cacheUrl);
+    //                 fs.rmSync(tempUrl);
     //                 result = size;
     //             }
     //             break;
